@@ -1,17 +1,15 @@
 package com.reagere.twitter.urlword.topcounting;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Tweet {
-    private final String msg;
-
-    public Tweet(String msg) {
-        this.msg = msg;
-    }
-
-    public String getMsg() {
-        return msg;
-    }
-
+    private String text;
     public boolean hasUrl() {
-        return msg.contains("http://");
+        return text.contains("http://");
     }
 }

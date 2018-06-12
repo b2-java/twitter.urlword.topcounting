@@ -5,11 +5,9 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.japi.Pair;
 import akka.stream.ActorMaterializer;
+import akka.stream.ClosedShape;
 import akka.stream.OverflowStrategy;
-import akka.stream.javadsl.Flow;
-import akka.stream.javadsl.Keep;
-import akka.stream.javadsl.Sink;
-import akka.stream.javadsl.Source;
+import akka.stream.javadsl.*;
 import akka.stream.testkit.TestPublisher;
 import akka.stream.testkit.TestSubscriber;
 import akka.stream.testkit.javadsl.TestSink;
@@ -189,4 +187,37 @@ public class TestStream {
         final Throwable ex = sub.expectError();
         assert(ex.getMessage().contains("C-47"));
     }
+
+//    @Test
+//    public void testCompleteStreamMultipleSink() {
+//        final Sink<Integer, CompletionStage<Integer>> sinkUnderTest = Sink.head();
+//        final RunnableGraph<CompletionStage<Integer>> result = RunnableGraph.fromGraph(GraphDSL.create(sinkUnderTest, (builder, out) -> {
+//            ClosedShape.getInstance();
+//        }));
+//        final Flow<Integer, Integer, NotUsed> flowUnderTest = Flow.of(Integer.class)
+//                .mapAsyncUnordered(2, sleep -> akka.pattern.PatternsCS.after(
+//                        Duration.ofMillis(10),
+//                        system.scheduler(),
+//                        system.dispatcher(),
+//                        CompletableFuture.completedFuture(sleep)
+//                ));
+//
+//        final Pair<TestPublisher.Probe<Integer>, TestSubscriber.Probe<Integer>> pubAndSub =
+//                TestSource.<Integer>probe(system)
+//                        .via(flowUnderTest)
+//                        .toMat(TestSink.probe(system), Keep.both())
+//                        .run(mat);
+//        final TestPublisher.Probe<Integer> pub = pubAndSub.first();
+//        final TestSubscriber.Probe<Integer> sub = pubAndSub.second();
+//
+//        sub.request(3);
+//        pub.sendNext(3);
+//        pub.sendNext(2);
+//        pub.sendNext(1);
+//        sub.expectNextUnordered(1, 2, 3);
+//
+//        pub.sendError(new Exception("Power surge in the linear subroutine C-47!"));
+//        final Throwable ex = sub.expectError();
+//        assert(ex.getMessage().contains("C-47"));
+//    }
 }

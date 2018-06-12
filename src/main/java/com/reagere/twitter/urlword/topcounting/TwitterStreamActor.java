@@ -1,5 +1,7 @@
 package com.reagere.twitter.urlword.topcounting;
 
+import com.google.common.collect.Lists;
+import com.google.gson.Gson;
 import com.twitter.hbc.ClientBuilder;
 import com.twitter.hbc.core.Client;
 import com.twitter.hbc.core.Constants;
@@ -14,17 +16,19 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
-public class TwitterStreamActor implements Publisher<Tweet>, Runnable {
+public class TwitterStreamActor implements Publisher<Tweet> {
 
     private final Client hosebirdClient;
     private final BlockingQueue<String> msgQueue;
     private final Set<Subscriber<? super Tweet>> subscribers = new HashSet<>();
-    private volatile boolean running = false;
+    private final Gson gson = new Gson();
 
     public TwitterStreamActor() {
         /** Set up your blocking queues: Be sure to size these properly based on expected TPS of your stream */
@@ -36,12 +40,17 @@ public class TwitterStreamActor implements Publisher<Tweet>, Runnable {
         StatusesFilterEndpoint hosebirdEndpoint = new StatusesFilterEndpoint();
         // Optional: set up some followings and track terms
         //List<Long> followings = Lists.newArrayList(1234L, 566788L);
-        //List<String> terms = Lists.newArrayList("apple");
+        List<String> terms = Lists.newArrayList("apple");
         //hosebirdEndpoint.followings(followings);
-        //hosebirdEndpoint.trackTerms(terms);
+        hosebirdEndpoint.trackTerms(terms);
 
         // These secrets should be read from a config file
-        Authentication hosebirdAuth = new OAuth1("consumerKey", "consumerSecret", "token", "secret");
+        String consumerKey = System.getProperty("consumerKey");
+        String consumerSecret = System.getProperty("consumerSecret");
+        String token = System.getProperty("token");
+        String secret = System.getProperty("secret");
+//        System.out.println("twitter OAuth1 > consumerKey: " + consumerKey + ", consumerSecret: " + consumerSecret + ", token: " + token + ", secret: " + secret);
+        Authentication hosebirdAuth = new OAuth1(consumerKey, consumerSecret, token, secret);
 
         ClientBuilder builder = new ClientBuilder()
                 .name("twitter.urlword.topcounting")                     // optional: mainly for the logs
@@ -57,35 +66,39 @@ public class TwitterStreamActor implements Publisher<Tweet>, Runnable {
         new Thread(() -> eventQueue.stream().forEach(System.out::println)).start();
     }
 
-    public void run() {
-        System.out.println("twitter thread started");
+    public void run(Function<Integer, Void> f) {
         int i = 0;
-        while (!hosebirdClient.isDone() && i < 6) {
+        while (!hosebirdClient.isDone() && i < 50) {
             try {
                 String msg = msgQueue.poll(10, TimeUnit.SECONDS);
                 if (msg != null) {
-                    System.out.println(msg);
-                    Tweet tweet = new Tweet(msg);
-                    subscribers.forEach(s -> s.onNext(tweet));
-                } else {
-                    System.err.println("no tweet yet");
+                    Tweet t = getTweet(msg);
+                    if (t != null) {
+                        subscribers.forEach(s -> s.onNext(t));
+                        i++;
+                        continue;
+                    }
                 }
+                System.err.println("no tweet yet");
                 i++;
             } catch (InterruptedException e) {
                 System.err.println("Twitter client interrupted : " + e.getLocalizedMessage());
                 Thread.currentThread().interrupt();
             }
         }
-        System.out.println("twitter thread done");
         hosebirdClient.stop();
+        for (Subscriber<? super Tweet> subscriber : subscribers) {
+            subscriber.onComplete();
+        }
+        f.apply(i);
+    }
+
+    private Tweet getTweet(String msg) {
+        return gson.fromJson(msg, Tweet.class);
     }
 
     @Override
     public void subscribe(Subscriber<? super Tweet> subscriber) {
-        System.out.println("get one subscriber");
         subscribers.add(subscriber);
-        if (!running) {
-            new Thread(this).start();
-        }
     }
 }
