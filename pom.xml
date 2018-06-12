@@ -7,13 +7,27 @@
     <groupId>com.reagere</groupId>
     <artifactId>twitter-url-word-top-counting</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <scm>
+        <connection>scm:git:https://github.com/reagere/twitter.urlword.topcounting.git</connection>
+        <url>https://github.com/reagere/twitter.urlword.topcounting.git</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <properties>
-        <maven.compiler.source>1.9</maven.compiler.source>
-        <maven.compiler.target>1.9</maven.compiler.target>
+        <akka.release>2.12</akka.release>
+        <akka.version>2.5.13</akka.version>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.0</version>
+        </dependency>
         <dependency>
             <groupId>com.twitter</groupId>
             <artifactId>hbc-core</artifactId> <!-- or hbc-twitter4j -->
@@ -21,24 +35,30 @@
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-actor_2.12</artifactId>
-            <version>2.5.13</version>
+            <artifactId>akka-actor_${akka.release}</artifactId>
+            <version>${akka.version}</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-testkit_2.12</artifactId>
-            <version>2.5.13</version>
+            <artifactId>akka-testkit_${akka.release}</artifactId>
+            <version>${akka.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-stream_2.12</artifactId>
-            <version>2.5.13</version>
+            <artifactId>akka-stream_${akka.release}</artifactId>
+            <version>${akka.version}</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-stream-testkit_2.12</artifactId>
-            <version>2.5.13</version>
+            <artifactId>akka-stream-testkit_${akka.release}</artifactId>
+            <version>${akka.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
