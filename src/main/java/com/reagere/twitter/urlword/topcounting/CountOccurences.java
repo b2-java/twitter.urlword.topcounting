@@ -1,17 +1,19 @@
 package com.reagere.twitter.urlword.topcounting;
 
+import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
-public class CountOccurences implements Subscriber<Set<String>> {
+public class CountOccurences implements Subscriber<Set<String>>, Publisher<Pair> {
 
-    private ConcurrentHashMap<String, AtomicLong> counts = new ConcurrentHashMap<>();
+    private Map<String, Long> counts = new HashMap<>();
     private Set<Subscription> subscriptionSet = new HashSet<>();
+    private Set<Subscriber<? super Pair>> subscriberSet = new HashSet<>();
 
     @Override
     public void onSubscribe(Subscription subscription) {
@@ -20,14 +22,11 @@ public class CountOccurences implements Subscriber<Set<String>> {
 
     @Override
     public void onNext(Set<String> words) {
-        words.stream().forEach(word -> counts.compute(word, (w, c) -> {
-            if (c == null) {
-                c = new AtomicLong(1);
-            } else {
-                c.incrementAndGet();
-            }
-            return c;
-        }));
+        words.stream().forEach(word -> push(new Pair(counts.compute(word, (w, c) -> c == null ? 1 : c + 1), word)));
+    }
+
+    private void push(Pair p) {
+        subscriberSet.stream().forEach(s -> s.onNext(p));
     }
 
     @Override
@@ -38,6 +37,10 @@ public class CountOccurences implements Subscriber<Set<String>> {
     @Override
     public void onComplete() {
         subscriptionSet.stream().forEach(s -> s.cancel());
-        System.out.println(counts);
+    }
+
+    @Override
+    public void subscribe(Subscriber<? super Pair> subscriber) {
+        subscriberSet.add(subscriber);
     }
 }

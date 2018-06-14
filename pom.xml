@@ -50,6 +50,11 @@
         </dependency>
 
         <!--<dependency>-->
+            <!--<groupId>com.typesafe.play</groupId>-->
+            <!--<artifactId>play_2.12</artifactId>-->
+            <!--<version>2.6.15</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
             <!--<groupId>com.typesafe.akka</groupId>-->
             <!--<artifactId>akka-actor_${akka.release}</artifactId>-->
             <!--<version>${akka.version}</version>-->

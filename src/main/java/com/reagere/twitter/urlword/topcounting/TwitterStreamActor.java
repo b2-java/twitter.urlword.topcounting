@@ -29,8 +29,11 @@ public class TwitterStreamActor implements Publisher<Tweet> {
     private final BlockingQueue<String> msgQueue;
     private final Set<Subscriber<? super Tweet>> subscribers = new HashSet<>();
     private final Gson gson = new Gson();
+    private final int limit;
 
-    public TwitterStreamActor() {
+    public TwitterStreamActor(int limit) {
+        this.limit = limit;
+
         /** Set up your blocking queues: Be sure to size these properly based on expected TPS of your stream */
         msgQueue = new LinkedBlockingQueue<>(100000);
         BlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>(1000);
@@ -53,12 +56,12 @@ public class TwitterStreamActor implements Publisher<Tweet> {
         Authentication hosebirdAuth = new OAuth1(consumerKey, consumerSecret, token, secret);
 
         ClientBuilder builder = new ClientBuilder()
-                .name("twitter.urlword.topcounting")                     // optional: mainly for the logs
+                .name("twitter.urlword.topcounting")
                 .hosts(hosebirdHosts)
                 .authentication(hosebirdAuth)
                 .endpoint(hosebirdEndpoint)
                 .processor(new StringDelimitedProcessor(msgQueue))
-                .eventMessageQueue(eventQueue);                          // optional: use this if you want to process client events
+                .eventMessageQueue(eventQueue);
 
         hosebirdClient = builder.build();
         // Attempts to establish a connection.
@@ -67,30 +70,24 @@ public class TwitterStreamActor implements Publisher<Tweet> {
     }
 
     public void run(Function<Integer, Void> f) {
-        int i = 0;
-        while (!hosebirdClient.isDone() && i < 50) {
+        int count = 0;
+        while (!hosebirdClient.isDone() && (limit < 0 || count < limit)) {
             try {
                 String msg = msgQueue.poll(10, TimeUnit.SECONDS);
                 if (msg != null) {
                     Tweet t = getTweet(msg);
                     if (t != null) {
                         subscribers.stream().filter(s -> s != null).forEach(s -> s.onNext(t));
-                        i++;
-                        continue;
+                        count++;
                     }
                 }
-                System.err.println("no tweet yet");
-                i++;
             } catch (InterruptedException e) {
                 System.err.println("Twitter client interrupted : " + e.getLocalizedMessage());
                 Thread.currentThread().interrupt();
             }
         }
         hosebirdClient.stop();
-//        for (Subscriber<? super Tweet> subscriber : subscribers) {
-//            subscriber.onComplete();
-//        }
-        f.apply(i);
+        f.apply(count);
     }
 
     private Tweet getTweet(String msg) {
@@ -100,5 +97,9 @@ public class TwitterStreamActor implements Publisher<Tweet> {
     @Override
     public void subscribe(Subscriber<? super Tweet> subscriber) {
         subscribers.add(subscriber);
+    }
+
+    public Gson getGson() {
+        return gson;
     }
 }
