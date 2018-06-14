@@ -87,9 +87,9 @@ public class TwitterStreamActor implements Publisher<Tweet> {
             }
         }
         hosebirdClient.stop();
-        for (Subscriber<? super Tweet> subscriber : subscribers) {
-            subscriber.onComplete();
-        }
+//        for (Subscriber<? super Tweet> subscriber : subscribers) {
+//            subscriber.onComplete();
+//        }
         f.apply(i);
     }
 
