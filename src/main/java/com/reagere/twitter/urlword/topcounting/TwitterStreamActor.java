@@ -49,7 +49,7 @@ public class TwitterStreamActor implements Publisher<Tweet> {
         String consumerSecret = System.getProperty("consumerSecret");
         String token = System.getProperty("token");
         String secret = System.getProperty("secret");
-//        System.out.println("twitter OAuth1 > consumerKey: " + consumerKey + ", consumerSecret: " + consumerSecret + ", token: " + token + ", secret: " + secret);
+        System.out.println("twitter OAuth1 > consumerKey: " + consumerKey + ", consumerSecret: " + consumerSecret + ", token: " + token + ", secret: " + secret);
         Authentication hosebirdAuth = new OAuth1(consumerKey, consumerSecret, token, secret);
 
         ClientBuilder builder = new ClientBuilder()
@@ -74,7 +74,7 @@ public class TwitterStreamActor implements Publisher<Tweet> {
                 if (msg != null) {
                     Tweet t = getTweet(msg);
                     if (t != null) {
-                        subscribers.forEach(s -> s.onNext(t));
+                        subscribers.stream().filter(s -> s != null).forEach(s -> s.onNext(t));
                         i++;
                         continue;
                     }
