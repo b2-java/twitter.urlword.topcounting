@@ -1,7 +1,7 @@
 package com.reagere.twitter.urlword.topcounting.web;
 
 import com.google.gson.Gson;
-import com.reagere.twitter.urlword.topcounting.TopN;
+import com.reagere.twitter.urlword.topcounting.actors.TopNSinkStreamActor;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.AllArgsConstructor;
@@ -11,7 +11,7 @@ import java.io.IOException;
 @AllArgsConstructor
 public class TopNController implements HttpHandler {
 
-    private final TopN topN;
+    private final TopNSinkStreamActor topN;
     private final Gson gson;
 
     @Override

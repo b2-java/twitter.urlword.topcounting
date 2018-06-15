@@ -1,4 +1,4 @@
-package com.reagere.twitter.urlword.topcounting;
+package com.reagere.twitter.urlword.topcounting.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,14 +7,14 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Pair implements Comparable {
+public class PairKeyCount implements Comparable {
     private Long count;
     private String key;
 
     @Override
     public int compareTo(Object o) {
-        if (o != null && o instanceof Pair) {
-            return count.compareTo(((Pair) o).count);
+        if (o instanceof PairKeyCount) {
+            return count.compareTo(((PairKeyCount) o).count);
         }
         return -1;
     }

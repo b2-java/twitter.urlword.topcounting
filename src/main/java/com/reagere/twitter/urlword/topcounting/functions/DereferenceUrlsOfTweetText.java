@@ -1,20 +1,23 @@
-package com.reagere.twitter.urlword.topcounting;
+package com.reagere.twitter.urlword.topcounting.functions;
 
+import com.reagere.twitter.urlword.topcounting.model.TweetText;
 import io.reactivex.functions.Function;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-public class Dereference implements Function<Tweet, Set<String>> {
+public class DereferenceUrlsOfTweetText implements Function<TweetText, List<String>> {
 
-    OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client = new OkHttpClient();
 
     @Override
-    public Set<String> apply(Tweet tweet) throws Exception {
-        Set<String> dereferencedUrls = new HashSet<>();
+    public List<String> apply(TweetText tweet) {
+        List<String> dereferencedUrls = new ArrayList<>();
         String text = tweet.getText();
         int debutIdx = text.indexOf("http");
         while (debutIdx >= 0) {
