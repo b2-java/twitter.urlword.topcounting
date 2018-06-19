@@ -34,18 +34,19 @@ public class TwitterSourceStreamActor implements Publisher<TweetText> {
 
     /**
      * You need to provide these JVM System properties: consumerKey, consumerSecret, token, secret from your tweeter dev/app account.
-     * @param limitNbTweets
+     * @param limitNbTweets number of tweets to fetch
+     * @param terms list of terms to listen from twitter stream
      */
     public TwitterSourceStreamActor(long limitNbTweets, List<String> terms) {
         this.limit = limitNbTweets;
 
         // code from official tweeter client
 
-        /** Set up your blocking queues: Be sure to size these properly based on expected TPS of your stream */
+        // Set up your blocking queues: Be sure to size these properly based on expected TPS of your stream
         msgQueue = new LinkedBlockingQueue<>(100000);
         BlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>(1000);
 
-        /** Declare the host you want to connect to, the endpoint, and authentication (basic auth or oauth) */
+        // Declare the host you want to connect to, the endpoint, and authentication (basic auth or oauth)
         Hosts hosebirdHosts = new HttpHosts(Constants.STREAM_HOST);
         StatusesFilterEndpoint hosebirdEndpoint = new StatusesFilterEndpoint();
         hosebirdEndpoint.trackTerms(terms);
@@ -58,7 +59,7 @@ public class TwitterSourceStreamActor implements Publisher<TweetText> {
         String consumerSecret = System.getProperty("consumerSecret");
         String token = System.getProperty("token");
         String secret = System.getProperty("secret");
-//        System.out.println("twitter OAuth1 > consumerKey: " + consumerKey + ", consumerSecret: " + consumerSecret + ", token: " + token + ", secret: " + secret);
+
         validateProperties(consumerKey, consumerSecret, token, secret);
         Authentication hosebirdAuth = new OAuth1(consumerKey, consumerSecret, token, secret);
 
@@ -99,6 +100,7 @@ public class TwitterSourceStreamActor implements Publisher<TweetText> {
                 System.err.println("Twitter client interrupted : " + e.getLocalizedMessage());
                 Thread.currentThread().interrupt();
             }
+// Java 8 style doesn't work
 //            try {
 //                Stream<String> tweetsFlow = msgQueue.stream().filter(t -> t != null);
 //                int diff = limit - count.get();
@@ -121,7 +123,9 @@ public class TwitterSourceStreamActor implements Publisher<TweetText> {
     }
 
     private TweetText getTweet(String msg) {
-        return gson.fromJson(msg, TweetText.class);
+        TweetText t = gson.fromJson(msg, TweetText.class);
+        t.setTime(System.currentTimeMillis());
+        return t;
     }
 
     @Override

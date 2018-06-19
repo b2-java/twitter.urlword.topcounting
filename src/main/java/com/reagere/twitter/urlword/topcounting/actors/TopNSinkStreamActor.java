@@ -8,9 +8,26 @@ import java.util.*;
 
 public class TopNSinkStreamActor implements Subscriber<PairKeyCount> {
 
-    private final int limit = 10;
-    private final PriorityQueue<PairKeyCount> pQueue = new PriorityQueue<>(limit);
+    // arguments
+    private final int limit;
+    private final String name;
+
+    // state
+    private final PriorityQueue<PairKeyCount> pQueue;
     private final Set<Subscription> subscriptionSet = new HashSet<>();
+
+    // latency
+    private long maxLatency = 0L;
+    private long minLatency = Long.MAX_VALUE;
+    private long sumLatency = 0;
+    private long nbLatencies = 0;
+    private long lastDisplay = 0;
+
+    public TopNSinkStreamActor(int limit, String name) {
+        this.limit = limit;
+        this.name = name;
+        pQueue = new PriorityQueue<>(limit);
+    }
 
     @Override
     public void onSubscribe(Subscription subscription) {
@@ -19,10 +36,28 @@ public class TopNSinkStreamActor implements Subscriber<PairKeyCount> {
 
     @Override
     public void onNext(PairKeyCount pair) {
-        pQueue.remove(new PairKeyCount(pair.getCount() - 1, pair.getKey()));
+        pQueue.remove(new PairKeyCount(pair.getCount() - 1, pair.getKey(), pair.getTime()));
         pQueue.add(pair);
         while (pQueue.size() > limit) {
             pQueue.poll();
+        }
+        doLatency(pair.getTime());
+    }
+
+    private void doLatency(long requestTime) {
+        long time = System.currentTimeMillis();
+        long delta = time - requestTime;
+        maxLatency = Math.max(maxLatency, delta);
+        minLatency = Math.min(minLatency, delta);
+        sumLatency += delta;
+        ++nbLatencies;
+        if (time - lastDisplay > 10_000) { // 10s
+            System.out.println(name + " > latency : max=" + maxLatency + " min=" + minLatency + " mean=" + (sumLatency / nbLatencies) + " for " + nbLatencies + " tweets");
+            lastDisplay = time;
+            maxLatency = 0;
+            minLatency = Long.MAX_VALUE;
+            sumLatency = 0;
+            nbLatencies = 0;
         }
     }
 

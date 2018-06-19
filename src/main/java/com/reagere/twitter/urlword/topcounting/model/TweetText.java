@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TweetText {
     private String text;
+    private long time;
     public boolean hasUrl() {
         return text.replace("\n", " ").matches(".*http(s)?://.*");
     }

@@ -48,6 +48,12 @@
             <artifactId>okhttp</artifactId>
             <version>3.10.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.sun.net.httpserver</groupId>
+            <artifactId>http</artifactId>
+            <version>20070405</version>
+        </dependency>
+
 
         <!--<dependency>-->
             <!--<groupId>com.typesafe.play</groupId>-->

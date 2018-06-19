@@ -1,13 +1,14 @@
 package com.reagere.twitter.urlword.topcounting.actors;
 
 import com.reagere.twitter.urlword.topcounting.model.PairKeyCount;
+import com.reagere.twitter.urlword.topcounting.model.TupleListTime;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 import java.util.*;
 
-public class CountOccurrencesFlowStreamActor implements Subscriber<List<String>>, Publisher<PairKeyCount> {
+public class CountOccurrencesFlowStreamActor implements Subscriber<TupleListTime>, Publisher<PairKeyCount> {
 
     private final Map<String, Long> counts = new HashMap<>();
     private final Set<Subscription> subscriptionSet = new HashSet<>();
@@ -19,8 +20,8 @@ public class CountOccurrencesFlowStreamActor implements Subscriber<List<String>>
     }
 
     @Override
-    public void onNext(List<String> words) {
-        words.forEach(word -> push(new PairKeyCount(counts.compute(word, (w, c) -> c == null ? 1 : c + 1), word)));
+    public void onNext(TupleListTime tupleListTime) {
+        tupleListTime.getWordsUrls().forEach(wordUrl -> push(new PairKeyCount(counts.compute(wordUrl, (w, c) -> c == null ? 1 : c + 1), wordUrl, tupleListTime.getTime())));
     }
 
     private void push(PairKeyCount p) {
